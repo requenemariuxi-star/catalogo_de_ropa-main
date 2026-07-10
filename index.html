@@ -263,12 +263,13 @@
 <body>
 
     <header>
-        <div class="logo">LUMINA</div>
+        <a href="index.html" class="logo" style="text-decoration:none;">LUMINA</a>
         <nav>
             <ul>
                 <li><a href="#novedades">Novedades</a></li>
                 <li><a href="#ropa">Ropa</a></li>
                 <li><a href="#zapatillas">Zapatillas</a></li>
+                <li style="position:relative;"><a href="carrito.html" style="display:flex;align-items:center;gap:0.3rem;">🛒 Carrito</a><span id="nav-cart-count" style="position:absolute;top:-10px;right:-14px;background:linear-gradient(45deg,#38bdf8,#818cf8);color:white;font-size:0.65rem;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;">0</span></li>
             </ul>
         </nav>
     </header>
@@ -497,7 +498,19 @@
 
     <!-- 🧠 LÓGICA EN JAVASCRIPT -->
     <script>
-        let carrito = [];
+        // Categorías de productos para referencia
+        const categorias = {
+            '1': 'Zapatillas', '2': 'Zapatillas',
+            '3': 'Ropa', '4': 'Ropa',
+            '5': 'Novedades', '6': 'Novedades'
+        };
+
+        // Cargar carrito desde localStorage
+        let carrito = JSON.parse(localStorage.getItem('lumina_carrito')) || [];
+
+        // Actualizar badge del nav al cargar
+        actualizarBadgeNav();
+        actualizarCarritoVisual();
 
         // Escuchar clics en los botones de "Agregar al carrito"
         document.querySelectorAll('.btn-agregar').forEach(boton => {
@@ -507,19 +520,32 @@
                 const precio = parseFloat(e.target.getAttribute('data-precio'));
 
                 agregarAlCarrito(id, nombre, precio);
+
+                // Animación visual del botón
+                e.target.textContent = '✓ Añadido';
+                e.target.style.background = 'linear-gradient(45deg, #38bdf8, #818cf8)';
+                e.target.style.color = 'white';
+                e.target.style.borderColor = 'transparent';
+                setTimeout(() => {
+                    e.target.textContent = 'Agregar al carrito';
+                    e.target.style.background = '';
+                    e.target.style.color = '';
+                    e.target.style.borderColor = '';
+                }, 1200);
             });
         });
 
         function agregarAlCarrito(id, nombre, precio) {
-            // Verificar si el producto ya está en el carrito
             const existe = carrito.find(item => item.id === id);
 
             if (existe) {
                 existe.cantidad++;
             } else {
-                carrito.push({ id, nombre, precio, cantidad: 1 });
+                carrito.push({ id, nombre, precio, categoria: categorias[id] || 'Producto', cantidad: 1 });
             }
+            guardarCarrito();
             actualizarCarritoVisual();
+            actualizarBadgeNav();
         }
 
         function cambiarCantidad(id, cambio) {
@@ -528,11 +554,22 @@
 
             producto.cantidad += cambio;
 
-            // Si la cantidad llega a 0, se elimina del carrito
             if (producto.cantidad <= 0) {
                 carrito = carrito.filter(item => item.id !== id);
             }
+            guardarCarrito();
             actualizarCarritoVisual();
+            actualizarBadgeNav();
+        }
+
+        function guardarCarrito() {
+            localStorage.setItem('lumina_carrito', JSON.stringify(carrito));
+        }
+
+        function actualizarBadgeNav() {
+            const badge = document.getElementById('nav-cart-count');
+            const totalItems = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+            badge.textContent = totalItems;
         }
 
         function actualizarCarritoVisual() {
@@ -571,14 +608,13 @@
             totalHTML.innerText = `$${total.toFixed(2)}`;
         }
 
-        // Botón de finalizar compra que simula la acción
+        // Botón de finalizar compra
         document.getElementById('btn-finalizar').addEventListener('click', () => {
             if (carrito.length === 0) {
                 alert('¡Tu carrito está vacío! Agrega algún producto para simular la compra.');
             } else {
-                alert('🎉 ¡Simulación de compra exitosa! Gracias por probar el carrito de Lumina.');
-                carrito = [];
-                actualizarCarritoVisual();
+                // Redirigir a la página del carrito para completar la compra
+                window.location.href = 'carrito.html';
             }
         });
     </script>
